@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Privacy Policy — iClicker AutoClicker</title>
+  <title>Privacy Policy — AutoClicker: Record & Replay</title>
   <style>
     body {
       max-width: 680px;
@@ -18,37 +18,45 @@
     h2 { font-size: 18px; font-weight: 600; margin-top: 32px; }
     p, li { color: #3a3a3c; }
     .updated { font-size: 14px; color: #86868b; margin-bottom: 32px; }
+    footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e5e5ea; font-size: 14px; color: #86868b; }
   </style>
 </head>
 <body>
   <h1>Privacy Policy</h1>
   <p class="updated">Last updated: May 2025</p>
 
-  <p>iClicker AutoClicker ("the extension") is a Chrome browser extension that records and replays click sequences on webpages. This policy explains how the extension handles data.</p>
+  <p><strong>AutoClicker: Record &amp; Replay</strong> is a Chrome browser extension for recording and replaying click sequences on webpages. This policy explains how the extension handles data.</p>
 
-  <h2>Data We Collect</h2>
-  <p>The extension does <strong>not</strong> collect, transmit, or share any personal data. All data stays on your device.</p>
+  <h2>Data Collection</h2>
+  <p>This extension does <strong>not</strong> collect, transmit, or share any personal data. All data stays on your device.</p>
 
   <h2>Local Storage</h2>
-  <p>The extension stores your recorded click sequences (screen coordinates and element labels) locally in Chrome's <code>storage.local</code> API. This data:</p>
+  <p>The extension stores your recorded click sequences (screen coordinates and element labels) locally using Chrome's <code>storage.local</code> API. This data:</p>
   <ul>
     <li>Never leaves your device</li>
-    <li>Is never sent to any server</li>
-    <li>Can be cleared at any time using the "Clear All Steps" button</li>
+    <li>Is never sent to any server or third party</li>
+    <li>Can be cleared at any time using the "Clear All Steps" button in the popup</li>
   </ul>
 
-  <h2>Permissions Used</h2>
+  <h2>Permissions</h2>
   <ul>
-    <li><strong>activeTab</strong> — to interact with the current browser tab when you click the extension icon</li>
-    <li><strong>scripting</strong> — to inject the click-recording and playback script into the page</li>
-    <li><strong>storage</strong> — to save your recorded click sequence locally between sessions</li>
+    <li><strong>activeTab</strong> — to interact with the current browser tab when the extension icon is clicked</li>
+    <li><strong>scripting</strong> — to inject the click-recording and playback script into the active page</li>
+    <li><strong>storage</strong> — to save your recorded click sequence locally between browser sessions</li>
   </ul>
-  <p>No permission is used to access browsing history, passwords, or any personal information.</p>
+  <p>No permission is used to access browsing history, passwords, cookies, or any personal information.</p>
 
   <h2>Third Parties</h2>
-  <p>The extension does not use any third-party services, analytics, or advertising.</p>
+  <p>This extension does not use any third-party services, analytics, tracking, or advertising SDKs of any kind.</p>
+
+  <h2>Changes</h2>
+  <p>Any future changes to this policy will be reflected on this page with an updated date.</p>
 
   <h2>Contact</h2>
-  <p>Questions? Open an issue on <a href="https://github.com/AryenP/iclicker-autoclicker">GitHub</a>.</p>
+  <p>Questions or concerns? Open an issue on <a href="https://github.com/AryenP/iclicker-autoclicker">GitHub</a>.</p>
+
+  <footer>
+    AutoClicker: Record &amp; Replay &mdash; Built by <strong>Aryen Palkar</strong> &middot; UC San Diego
+  </footer>
 </body>
 </html>
