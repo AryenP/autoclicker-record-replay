@@ -1,0 +1,57 @@
+AutoClicker: Record & Replay lets you click anywhere on a webpage, save those positions as a numbered sequence, and replay them automatically — on demand or on a loop.
+
+No scripts. No code. Just click, record, play.
+
+─────────────────────────────────────
+HOW IT WORKS
+─────────────────────────────────────
+
+1. RECORD
+Open the extension popup and press Start Recording. A subtle outline appears around the page and your cursor turns into a crosshair. Click every spot on the page you want to automate — a numbered purple marker appears at each position. When you're done, hit the Stop Recording button in the corner of the page.
+
+2. CONFIGURE
+Reopen the popup to see your full click sequence. Set the delay between each click in seconds, and toggle Loop if you want the sequence to repeat forever.
+
+3. PLAY
+Hit Play. The extension clicks each recorded position in order, highlighting the active step in orange as it goes. Hit Stop at any time.
+
+─────────────────────────────────────
+FEATURES
+─────────────────────────────────────
+
+✦ Visual click recording — see exactly where each click will land with numbered on-screen markers
+✦ Precise coordinates — clicks are dispatched to the exact pixel you recorded
+✦ Ordered playback — steps fire in the sequence you set, every time
+✦ Custom delay — set any delay between clicks in seconds (e.g. 0.5, 1, 2.5)
+✦ Loop mode — repeat the full sequence continuously until you stop it
+✦ Reorder steps — move any step up or down in the sequence with one click
+✦ Delete steps — remove individual steps or clear everything and start fresh
+✦ Persistent memory — your recorded steps are saved automatically and survive page reloads and browser restarts
+✦ Works on any website — no configuration needed per site
+
+─────────────────────────────────────
+GREAT FOR
+─────────────────────────────────────
+
+• Online surveys and repetitive form submissions
+• Multi-step web workflows you run regularly
+• QA testing and UI automation without writing code
+• Any task where you click the same spots over and over
+
+─────────────────────────────────────
+PRIVACY
+─────────────────────────────────────
+
+AutoClicker: Record & Replay collects zero personal data. Your recorded click sequences are stored locally on your device using Chrome's built-in storage — they are never sent to any server, never shared with anyone, and can be deleted instantly using the Clear All Steps button.
+
+Permissions used:
+• activeTab — to interact with the current tab when the popup is open
+• scripting — to inject the recording and playback script into the page
+• storage — to save your click sequence locally between sessions
+
+─────────────────────────────────────
+CREDITS
+─────────────────────────────────────
+
+Built by Aryen Palkar, UC San Diego.
+Source code: https://github.com/AryenP/iclicker-autoclicker

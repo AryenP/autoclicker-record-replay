@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AutoClicker: Record & Replay",
   "version": "1.0",
-  "description": "Visually record click sequences on any webpage and replay them automatically. Set delays, loop, and reorder steps — no coding needed",
+  "description": "Record click sequences on any webpage and replay them automatically. Set delays, loop, and reorder steps — no coding needed",
   "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_popup": "popup.html",
