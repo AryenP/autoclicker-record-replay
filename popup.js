@@ -110,6 +110,15 @@ btnClear.addEventListener('click', () => send({ type: 'CLEAR' }));
 
 // ── Init & live updates ──────────────────────────────────────
 
+// Inject content script upfront when popup opens (no manifest content_scripts needed)
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+  const tabId = tabs[0]?.id;
+  if (tabId) {
+    chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] })
+      .catch(() => {}); // silently ignore errors (e.g. chrome:// pages)
+  }
+});
+
 chrome.storage.local.get('acState', ({ acState }) => {
   applyState(acState || {});
 });
