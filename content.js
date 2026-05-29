@@ -1,4 +1,4 @@
-const _SK = 'acState_' + window.location.hostname;
+const _SK = 'acState';
 const _MC = '__ac_marker';
 
 // Runs on EVERY injection — restores markers without needing the popup open
@@ -169,6 +169,17 @@ function persist() {
     [SITE_KEY]: { mode: AC.mode, steps: AC.steps, currentStep: AC.currentStep },
   });
 }
+
+// Live cross-tab sync — when any tab updates state, all tabs re-render
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes[SITE_KEY]) return;
+  const state = changes[SITE_KEY].newValue;
+  if (!state || AC.mode === 'recording') return; // don't interrupt active recording
+  AC.steps = state.steps || [];
+  AC.currentStep = state.currentStep ?? -1;
+  AC.mode = state.mode || 'idle';
+  renderMarkers();
+});
 
 chrome.runtime.onMessage.addListener(msg => {
   switch (msg.type) {

@@ -1,6 +1,6 @@
 let steps = [];
 let mode = 'idle';
-let siteKey = 'acState'; // overwritten with per-site key on init
+const GLOBAL_KEY = 'acState';
 
 const dot     = document.getElementById('dot');
 const btnRec  = document.getElementById('btnRec');
@@ -19,7 +19,6 @@ function send(msg) {
     if (!tabId) return;
     chrome.tabs.sendMessage(tabId, msg, () => {
       const err = chrome.runtime.lastError?.message ?? '';
-      // Only inject when there is genuinely no receiver (not just a missing sendResponse)
       if (err.includes('Receiving end does not exist') || err.includes('Could not establish connection')) {
         chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }, () => {
           if (!chrome.runtime.lastError) chrome.tabs.sendMessage(tabId, msg);
@@ -75,14 +74,9 @@ function applyState(state) {
   steps = state.steps || [];
   currentStep = state.currentStep ?? -1;
 
-  // Dot color
   dot.className = mode === 'recording' ? 'rec' : mode === 'playing' ? 'play' : '';
-
-  // Record button
-  btnRec.textContent = mode === 'recording' ? '⏹  Stop Recording' : '⏺  Start Recording';
+  btnRec.textContent = mode === 'recording' ? '⏹  Stop Recording' : '⏺  Start Recording';
   btnRec.classList.toggle('recording', mode === 'recording');
-
-  // Play/Stop
   btnPlay.disabled = mode === 'playing' || steps.length === 0;
   btnStop.disabled = mode !== 'playing';
 
@@ -97,43 +91,20 @@ btnRec.addEventListener('click', () => {
 });
 
 btnPlay.addEventListener('click', () => {
-  send({
-    type: 'PLAY',
-    steps,
-    delay: parseFloat(delayEl.value) || 1,
-    loop: loopEl.checked,
-  });
+  send({ type: 'PLAY', steps, delay: parseFloat(delayEl.value) || 1, loop: loopEl.checked });
 });
 
 btnStop.addEventListener('click', () => send({ type: 'STOP_PLAY' }));
-
 btnClear.addEventListener('click', () => send({ type: 'CLEAR' }));
 
 // ── Init & live updates ──────────────────────────────────────
 
 chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
   const tabId = tabs[0]?.id;
-
-  // Derive per-site storage key from the active tab's hostname
-  try {
-    const hostname = new URL(tabs[0]?.url || '').hostname;
-    if (hostname) siteKey = 'acState_' + hostname;
-  } catch(e) {}
-
-  // Inject content script (no manifest content_scripts needed)
-  if (tabId) {
-    chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] })
-      .catch(() => {});
-  }
-
-  // Load saved steps for this specific site
-  chrome.storage.local.get(siteKey, data => {
-    applyState(data[siteKey] || {});
-  });
+  if (tabId) chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }).catch(() => {});
+  chrome.storage.local.get(GLOBAL_KEY, data => applyState(data[GLOBAL_KEY] || {}));
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes[siteKey]) {
-    applyState(changes[siteKey].newValue || {});
-  }
+  if (area === 'local' && changes[GLOBAL_KEY]) applyState(changes[GLOBAL_KEY].newValue || {});
 });
