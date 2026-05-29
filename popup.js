@@ -1,5 +1,6 @@
 let steps = [];
 let mode = 'idle';
+let siteKey = 'acState'; // overwritten with per-site key on init
 
 const dot     = document.getElementById('dot');
 const btnRec  = document.getElementById('btnRec');
@@ -110,21 +111,29 @@ btnClear.addEventListener('click', () => send({ type: 'CLEAR' }));
 
 // ── Init & live updates ──────────────────────────────────────
 
-// Inject content script upfront when popup opens (no manifest content_scripts needed)
 chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
   const tabId = tabs[0]?.id;
+
+  // Derive per-site storage key from the active tab's hostname
+  try {
+    const hostname = new URL(tabs[0]?.url || '').hostname;
+    if (hostname) siteKey = 'acState_' + hostname;
+  } catch(e) {}
+
+  // Inject content script (no manifest content_scripts needed)
   if (tabId) {
     chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] })
-      .catch(() => {}); // silently ignore errors (e.g. chrome:// pages)
+      .catch(() => {});
   }
-});
 
-chrome.storage.local.get('acState', ({ acState }) => {
-  applyState(acState || {});
+  // Load saved steps for this specific site
+  chrome.storage.local.get(siteKey, data => {
+    applyState(data[siteKey] || {});
+  });
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.acState) {
-    applyState(changes.acState.newValue || {});
+  if (area === 'local' && changes[siteKey]) {
+    applyState(changes[siteKey].newValue || {});
   }
 });

@@ -8,6 +8,9 @@ let stopBtn = null;
 let overlay = null;
 const MC = '__ac_marker';
 
+// Per-site storage key — steps are saved per hostname
+const SITE_KEY = 'acState_' + window.location.hostname;
+
 // ── Markers ─────────────────────────────────────────────────
 
 function renderMarkers() {
@@ -128,7 +131,7 @@ async function play(steps, delaySec, loop) {
         }
       }
     }
-  } while (loop && !playAbort);
+  } while (loop && AC.steps.length > 1 && !playAbort); // don't loop a single step
 
   AC.mode = 'idle';
   AC.currentStep = -1;
@@ -140,7 +143,7 @@ async function play(steps, delaySec, loop) {
 
 function persist() {
   chrome.storage.local.set({
-    acState: { mode: AC.mode, steps: AC.steps, currentStep: AC.currentStep },
+    [SITE_KEY]: { mode: AC.mode, steps: AC.steps, currentStep: AC.currentStep },
   });
 }
 
@@ -164,9 +167,10 @@ chrome.runtime.onMessage.addListener(msg => {
   }
 });
 
-chrome.storage.local.get('acState', ({ acState }) => {
-  if (acState?.steps?.length) {
-    AC.steps = acState.steps;
+chrome.storage.local.get(SITE_KEY, (data) => {
+  const saved = data[SITE_KEY];
+  if (saved?.steps?.length) {
+    AC.steps = saved.steps;
     renderMarkers();
   }
 });
