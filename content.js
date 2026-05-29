@@ -55,6 +55,8 @@ function onPageClick(e) {
 }
 
 function startRecording() {
+  AC.steps = [];
+  AC.currentStep = -1;
   AC.mode = 'recording';
   document.documentElement.style.cursor = 'crosshair';
 

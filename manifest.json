@@ -4,6 +4,12 @@
   "version": "1.0",
   "description": "Record click sequences on any webpage and replay them automatically. Set delays, loop, and reorder steps — no coding needed",
   "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
