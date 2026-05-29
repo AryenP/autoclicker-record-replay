@@ -22,7 +22,8 @@ FEATURES
 ✦ Visual click recording — see exactly where each click will land with numbered on-screen markers
 ✦ Precise coordinates — clicks are dispatched to the exact pixel you recorded
 ✦ Ordered playback — steps fire in the sequence you set, every time
-✦ Custom delay — set any delay between clicks in seconds (e.g. 0.5, 1, 2.5)
+✦ Custom delay — set a global delay between clicks, or override it per individual step
+✦ Per-step delay — give each step its own timing so slow-loading pages get more time
 ✦ Loop mode — repeat the full sequence continuously until you stop it
 ✦ Reorder steps — move any step up or down in the sequence with one click
 ✦ Delete steps — remove individual steps or clear everything and start fresh
@@ -48,6 +49,7 @@ Permissions used:
 • activeTab — to interact with the current tab when the popup is open
 • scripting — to inject the recording and playback script into the page
 • storage — to save your click sequence locally between sessions
+• host_permissions (<all_urls>) — required so the extension can show your recorded markers and respond to playback commands on any website you choose to automate, without you having to approve each site manually. No data is read, collected, or transmitted — the permission is used solely to display on-page markers and fire click events at positions you recorded.
 
 ─────────────────────────────────────
 CREDITS

@@ -1,23 +1,20 @@
 const _SK = 'acState';
 const _MC = '__ac_marker';
 
-// Runs on EVERY injection — restores markers without needing the popup open
-chrome.storage.local.get(_SK, (data) => {
-  const saved = data[_SK];
-  if (!saved?.steps?.length) return;
-  if (window.__acState) {
-    window.__acState.steps = saved.steps;
-    window.__acState.currentStep = saved.currentStep ?? -1;
-  }
+// ── Always runs on every injection — restores markers ────────
+function _renderFromStorage(steps, currentStep) {
   document.querySelectorAll('.' + _MC).forEach(el => el.remove());
-  saved.steps.forEach((step, i) => {
+  steps.forEach((step, i) => {
     const m = document.createElement('div');
     m.className = _MC;
+    const px = step.pageX ?? step.x;
+    const py = step.pageY ?? step.y;
     Object.assign(m.style, {
       position: 'fixed',
-      left: `${step.x - 14}px`, top: `${step.y - 14}px`,
+      left: `${px - window.scrollX - 14}px`,
+      top:  `${py - window.scrollY - 14}px`,
       width: '28px', height: '28px', borderRadius: '50%',
-      background: i === (saved.currentStep ?? -1) ? '#f59e0b' : '#a78bfa',
+      background: i === (currentStep ?? -1) ? '#f59e0b' : '#a78bfa',
       border: '2px solid #fff', color: '#fff', fontSize: '11px', fontWeight: '700',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: '2147483645', pointerEvents: 'none',
@@ -27,9 +24,19 @@ chrome.storage.local.get(_SK, (data) => {
     m.textContent = i + 1;
     document.body.appendChild(m);
   });
+}
+
+chrome.storage.local.get(_SK, (data) => {
+  const saved = data[_SK];
+  if (!saved?.steps?.length) return;
+  if (window.__acState) {
+    window.__acState.steps = saved.steps;
+    window.__acState.currentStep = saved.currentStep ?? -1;
+  }
+  _renderFromStorage(saved.steps, saved.currentStep);
 });
 
-// Guard — event listeners and state only set up once per page load
+// ── One-time setup (per page load) ──────────────────────────
 if (!window.__acLoaded) {
 window.__acLoaded = true;
 
@@ -42,18 +49,19 @@ const SITE_KEY = _SK;
 const MC = _MC;
 
 // ── Markers ─────────────────────────────────────────────────
-
 function renderMarkers() {
   document.querySelectorAll('.' + MC).forEach(el => el.remove());
   AC.steps.forEach((step, i) => {
     const m = document.createElement('div');
     m.className = MC;
-    const active = i === AC.currentStep;
+    const px = step.pageX ?? step.x;
+    const py = step.pageY ?? step.y;
     Object.assign(m.style, {
       position: 'fixed',
-      left: `${step.x - 14}px`, top: `${step.y - 14}px`,
+      left: `${px - window.scrollX - 14}px`,
+      top:  `${py - window.scrollY - 14}px`,
       width: '28px', height: '28px', borderRadius: '50%',
-      background: active ? '#f59e0b' : '#a78bfa',
+      background: i === AC.currentStep ? '#f59e0b' : '#a78bfa',
       border: '2px solid #fff', color: '#fff', fontSize: '11px', fontWeight: '700',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: '2147483645', pointerEvents: 'none',
@@ -65,8 +73,14 @@ function renderMarkers() {
   });
 }
 
-// ── Recording ────────────────────────────────────────────────
+// Re-render markers on scroll (markers are fixed so positions need updating)
+let _rafId = null;
+window.addEventListener('scroll', () => {
+  if (_rafId) return;
+  _rafId = requestAnimationFrame(() => { _rafId = null; renderMarkers(); });
+}, { passive: true });
 
+// ── Recording ────────────────────────────────────────────────
 function onPageClick(e) {
   if (stopBtn && (e.target === stopBtn || stopBtn.contains(e.target))) return;
   e.preventDefault();
@@ -75,7 +89,16 @@ function onPageClick(e) {
   const label = e.target
     ? (e.target.textContent?.trim().slice(0, 30) || e.target.tagName)
     : '';
-  AC.steps.push({ id: Date.now(), x: e.clientX, y: e.clientY, label });
+
+  // Store page-relative coordinates so playback works after scroll
+  AC.steps.push({
+    id: Date.now(),
+    x: e.clientX, y: e.clientY,           // kept for display / coords label
+    pageX: e.clientX + window.scrollX,    // document coords for reliable replay
+    pageY: e.clientY + window.scrollY,
+    label,
+    delay: null,                           // null = use global delay
+  });
   renderMarkers();
   persist();
 }
@@ -125,7 +148,6 @@ function stopRecording() {
 }
 
 // ── Playback ─────────────────────────────────────────────────
-
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function play(steps, delaySec, loop) {
@@ -141,15 +163,26 @@ async function play(steps, delaySec, loop) {
       renderMarkers();
       persist();
 
-      await sleep(delaySec * 1000);
+      // Per-step delay falls back to global delay
+      const stepDelay = AC.steps[i].delay != null ? AC.steps[i].delay : delaySec;
+      await sleep(stepDelay * 1000);
       if (playAbort) break;
 
-      const { x, y } = AC.steps[i];
-      const el = document.elementFromPoint(x, y);
+      // Scroll to bring target into view, then click at document coords
+      const { pageX, pageY, x, y } = AC.steps[i];
+      const docX = pageX ?? x;
+      const docY = pageY ?? y;
+
+      window.scrollTo({ top: Math.max(0, docY - window.innerHeight / 2), behavior: 'instant' });
+      await sleep(50); // brief settle after scroll
+
+      const clientX = docX - window.scrollX;
+      const clientY = docY - window.scrollY;
+      const el = document.elementFromPoint(clientX, clientY);
       if (el) {
         for (const t of ['mousedown', 'mouseup', 'click']) {
           el.dispatchEvent(new MouseEvent(t, {
-            bubbles: true, cancelable: true, clientX: x, clientY: y,
+            bubbles: true, cancelable: true, clientX, clientY,
           }));
         }
       }
@@ -163,18 +196,17 @@ async function play(steps, delaySec, loop) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
-
 function persist() {
   chrome.storage.local.set({
     [SITE_KEY]: { mode: AC.mode, steps: AC.steps, currentStep: AC.currentStep },
   });
 }
 
-// Live cross-tab sync — when any tab updates state, all tabs re-render
+// Live cross-tab sync
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local' || !changes[SITE_KEY]) return;
   const state = changes[SITE_KEY].newValue;
-  if (!state || AC.mode === 'recording') return; // don't interrupt active recording
+  if (!state || AC.mode === 'recording') return;
   AC.steps = state.steps || [];
   AC.currentStep = state.currentStep ?? -1;
   AC.mode = state.mode || 'idle';
@@ -183,10 +215,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 chrome.runtime.onMessage.addListener(msg => {
   switch (msg.type) {
-    case 'START_REC':    startRecording(); break;
-    case 'STOP_REC':     stopRecording(); break;
-    case 'PLAY':         play(msg.steps, msg.delay, msg.loop); break;
-    case 'STOP_PLAY':    playAbort = true; break;
+    case 'START_REC':   startRecording(); break;
+    case 'STOP_REC':    stopRecording(); break;
+    case 'PLAY':        play(msg.steps, msg.delay, msg.loop); break;
+    case 'STOP_PLAY':   playAbort = true; break;
     case 'DELETE_STEP':
       AC.steps = AC.steps.filter(s => s.id !== msg.id);
       renderMarkers(); persist(); break;
@@ -195,6 +227,11 @@ chrome.runtime.onMessage.addListener(msg => {
       const [s] = AC.steps.splice(from, 1);
       AC.steps.splice(to, 0, s);
       renderMarkers(); persist(); break;
+    }
+    case 'SET_STEP_DELAY': {
+      const step = AC.steps.find(s => s.id === msg.id);
+      if (step) { step.delay = msg.delay; persist(); }
+      break;
     }
     case 'CLEAR':
       AC.steps = []; renderMarkers(); persist(); break;

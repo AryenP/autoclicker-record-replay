@@ -12,7 +12,6 @@ const delayEl = document.getElementById('delay');
 const loopEl  = document.getElementById('loop');
 
 // ── Send to content script ───────────────────────────────────
-
 function send(msg) {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     const tabId = tabs[0]?.id;
@@ -29,7 +28,6 @@ function send(msg) {
 }
 
 // ── UI rendering ─────────────────────────────────────────────
-
 function renderSteps() {
   listEl.innerHTML = '';
   steps.forEach((step, i) => {
@@ -45,6 +43,25 @@ function renderSteps() {
     info.innerHTML = `
       <div class="step-label">${step.label || 'Click'}</div>
       <div class="step-coords">(${step.x}, ${step.y})</div>`;
+
+    // Per-step delay input
+    const delayWrap = document.createElement('div');
+    delayWrap.className = 'step-delay';
+    delayWrap.title = 'Custom delay for this step (leave blank to use global)';
+    const delayInput = document.createElement('input');
+    delayInput.type = 'number';
+    delayInput.min = '0';
+    delayInput.step = '0.5';
+    delayInput.placeholder = '—';
+    if (step.delay != null) delayInput.value = step.delay;
+    delayInput.addEventListener('change', () => {
+      const val = parseFloat(delayInput.value);
+      send({ type: 'SET_STEP_DELAY', id: step.id, delay: isNaN(val) ? null : val });
+    });
+    const unitSpan = document.createElement('span');
+    unitSpan.className = 'unit';
+    unitSpan.textContent = 's';
+    delayWrap.append(delayInput, unitSpan);
 
     const arrows = document.createElement('div');
     arrows.className = 'step-arrows';
@@ -62,7 +79,7 @@ function renderSteps() {
     del.className = 'btn-del'; del.textContent = '✕'; del.title = 'Delete';
     del.addEventListener('click', () => send({ type: 'DELETE_STEP', id: step.id }));
 
-    row.append(num, info, arrows, del);
+    row.append(num, info, delayWrap, arrows, del);
     listEl.appendChild(row);
   });
 }
@@ -84,7 +101,6 @@ function applyState(state) {
 }
 
 // ── Events ───────────────────────────────────────────────────
-
 btnRec.addEventListener('click', () => {
   if (mode === 'recording') send({ type: 'STOP_REC' });
   else send({ type: 'START_REC' });
@@ -98,7 +114,6 @@ btnStop.addEventListener('click', () => send({ type: 'STOP_PLAY' }));
 btnClear.addEventListener('click', () => send({ type: 'CLEAR' }));
 
 // ── Init & live updates ──────────────────────────────────────
-
 chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
   const tabId = tabs[0]?.id;
   if (tabId) chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }).catch(() => {});
