@@ -131,7 +131,7 @@ async function play(steps, delaySec, loop) {
         }
       }
     }
-  } while (loop && AC.steps.length > 1 && !playAbort); // don't loop a single step
+  } while (loop && !playAbort);
 
   AC.mode = 'idle';
   AC.currentStep = -1;
